@@ -1,0 +1,13 @@
+Package: PreKnitPostHTMLRender
+Title: Pre-knitting Processing And Post HTML-Rendering Processing
+Version: 0.1.0
+Date: 2016-06-05
+Author: Chin Soon Lim [aut]
+Maintainer: Chin Soon Lim <chinsoon12@hotmail.com>
+Description: Dynamize headers or R code within Rmd documents to prevent proliferation of Rmd docs for similar reports. Add in external HTML document within rmarkdown rendered HTML doc.
+Depends: R (>= 3.3.0)
+Imports: utils, tools, xml2 (>= 0.1.2), knitr (>= 1.13), rmarkdown (>= 0.9.6)
+License: GPL (>= 2) | file LICENSE
+RoxygenNote: 5.0.1
+URL: https://github.com/chinsoon12/PreKnitPostHTMLRender
+BugReports: https://github.com/chinsoon12/PreKnitPostHTMLRender

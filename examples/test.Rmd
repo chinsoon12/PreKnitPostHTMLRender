@@ -1,0 +1,19 @@
+---
+title: "Example Usage"
+output: html_document
+---
+
+This document is used for various similar reports.
+
+@@@
+cat(paste("#Dynamic Header1", rnorm(1)))
+@@@
+
+`%%% writeLines(readLines("additional.html"))`
+
+@@@
+cat(paste("##Dynamic Header2", rnorm(1)))
+@@@
+
+Some content is invariant across different reports.
+
