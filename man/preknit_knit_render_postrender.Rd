@@ -13,21 +13,54 @@ preknit_knit_render_postrender(pRmdfile, outhtml = NULL)
 \item{outhtml}{- output html file}
 }
 \value{
-The output html file will have the evaluated @@ and/or `%%% ` code chunks
+The output html file will have the codes between @@@
+and/or \`\%\%\% \` (where \` is a backtick) code chunks evaluated
 }
 \description{
-In pre-knitting processing, function takes in a Rmd file, evaluates code chunks
+1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks
 which are marked as between adjacent lines of @@s, and then
 replace these code chunks with evaluated output captured using capture.output function.
-}
-\details{
-Function then calls knitr::knit followed by rmarkdown::render.
-
-After which, in post HTML-rendering processing, function evaluates code chunks
+2) Function then calls knitr::knit followed by rmarkdown::render.
+3) After which, in post HTML-rendering processing, function evaluates code chunks
 in between `%%% MY_CODE_HERE `, and then replace these code chunks with evaluated output
 captured using capture.output function. Typically, we want to insert an external HTML file
 and we can use `%%% writeLines(readLines("MY_EXTERNAL_HTML_FILE"))` within the Rmd file.
 This function will read in the external html file and replace this `%%% ` with
 contents in the html file.
+}
+\examples{
+samplermd <- tempfile('test', getwd(), '.Rmd')
+addhtml <- 'test__test.html'
+
+#generate the test Rmd file
+writeLines(c('---',
+'title: "Example Usage"',
+'output: html_document',
+'---',
+'',
+'This document is used for various similar reports.',
+'',
+'@@@',
+"cat(paste('#Dynamic Header1', rnorm(1)))",
+'@@@',
+'',
+'`\%\%\% writeLines(readLines("test__test.html"))`',
+'',
+'@@@',
+'cat(paste("##Dynamic Header2", rnorm(1)))',
+'@@@',
+'',
+'Some content is invariant across different reports.'), samplermd)
+
+#generate test html file
+writeLines(c('<ul>',
+'<li>Item 1</li>',
+'<li>Item 2</li>',
+'<li>Item 3</li>',
+'</ul>'), addhtml)
+
+#Pre-knit processing and post HTML render processing
+preknit_knit_render_postrender(samplermd)
+
 }
 
