@@ -4,12 +4,12 @@
 \alias{pre_knit_proc}
 \title{Pre-knitting Processing}
 \usage{
-pre_knit_proc(pRmdfile, Rmdfile = NULL)
+pre_knit_proc(infile, outfile = NULL)
 }
 \arguments{
-\item{pRmdfile}{- input file for be processed}
+\item{infile}{- input file for be processed}
 
-\item{Rmdfile}{- output file name}
+\item{outfile}{- output file name}
 }
 \description{
 Evaluates code chunks which are marked as between adjacent lines of @@s.

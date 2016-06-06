@@ -48,7 +48,7 @@ eval_src <- function(srcCharVec, ...) {
 #'
 #' @importFrom tools file_path_sans_ext
 #'
-pre_knit_proc <- function(infile, outfile=NULL, encoding="UTF-8") {
+pre_knit_proc <- function(infile, outfile=NULL) {
     symbol <- '@@@'
 
     if (is.null(outfile)) {
@@ -56,7 +56,7 @@ pre_knit_proc <- function(infile, outfile=NULL, encoding="UTF-8") {
     }
 
     #read in code file
-    incode <- readLines(infile, encoding=encoding)
+    incode <- readLines(infile)
 
     #chunk start indices
     indices <- which(grepl(symbol, incode))
@@ -216,9 +216,9 @@ post_html_render_proc <- function(inhtml, outhtml=NULL) {
 #' '</ul>'), addhtml)
 #'
 #' #Pre-knit processing and post HTML render processing
-#' preknit_knit_render_postrender(samplermd)
+#' preknit_knit_render_postrender(samplermd, "sample__html.html")
 #'
-#' #output 'test__test.html' is in tempdir()
+#' #output 'sample__html.html' is in tempdir()
 #'
 #' setwd(oldwd)
 #' }
@@ -233,7 +233,7 @@ preknit_knit_render_postrender <- function(pRmdfile, outhtml=NULL) {
     }
 
     #print("Pre-knitting processing...")
-    pre_knit_proc(pRmdfile, Rmdfile, "UTF-8")
+    pre_knit_proc(pRmdfile, Rmdfile)
 
     #print("Knitting...")
     knit(Rmdfile, mdfile)

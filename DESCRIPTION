@@ -6,7 +6,7 @@ Author: Chin Soon Lim [aut]
 Maintainer: Chin Soon Lim <chinsoon12@hotmail.com>
 Description: Dynamize headers or R code within 'Rmd' files to prevent proliferation of 'Rmd' files for similar reports. Add in external HTML document within 'rmarkdown' rendered HTML doc.
 Depends: R (>= 3.3.0)
-Imports: utils, tools, xml2 (>= 0.1.2), knitr (>= 1.13), rmarkdown (>= 0.9.6)
+Imports: utils, tools, XML (>= 3.98-1.4), knitr (>= 1.13), rmarkdown (>= 0.9.6)
 SystemRequirements: pandoc (>= 1.12.3) -
         http://johnmacfarlane.net/pandoc
 License: GPL (>= 2) | file LICENSE

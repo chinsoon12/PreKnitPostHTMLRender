@@ -18,7 +18,7 @@ and/or \`\%\%\% \` (where \` is a backtick) code chunks evaluated
 }
 \description{
 1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks
-which are marked as between adjacent lines of @@s, and then
+which are marked as between adjacent lines of @@@s, and then
 replace these code chunks with evaluated output captured using capture.output function.
 2) Function then calls knitr::knit followed by rmarkdown::render.
 3) After which, in post HTML-rendering processing, function evaluates code chunks
@@ -29,6 +29,11 @@ This function will read in the external html file and replace this `%%% ` with
 contents in the html file.
 }
 \examples{
+\donttest{
+oldwd <- getwd()
+setwd(tempdir())
+
+#pandoc.exe is required to run this code
 samplermd <- tempfile('test', getwd(), '.Rmd')
 addhtml <- 'test__test.html'
 
@@ -60,7 +65,12 @@ writeLines(c('<ul>',
 '</ul>'), addhtml)
 
 #Pre-knit processing and post HTML render processing
-preknit_knit_render_postrender(samplermd)
+preknit_knit_render_postrender(samplermd, "sample__html.html")
+
+#output 'sample__html.html' is in tempdir()
+
+setwd(oldwd)
+}
 
 }
 
