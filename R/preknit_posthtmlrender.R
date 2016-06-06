@@ -10,8 +10,7 @@
 #' @importFrom utils capture.output
 #'
 run_code <- function(oneline, envir) {
-    ans <- capture.output(eval(parse(text=oneline),
-        envir=envir))
+    ans <- capture.output(eval(parse(text=oneline), envir=envir))
     gsub("^\\[.*\\] ", "", ans)
 } #run_code
 
@@ -38,35 +37,23 @@ eval_src <- function(srcCharVec, ...) {
 
 
 ##########################################################################
-#' Evaluate and replace code chunks/lines
+#' Pre-knitting Processing
 #'
-#' Extract code chunks for Rmd or code lines for html, evaluate each line and
-#' replace original code chunks/lines with captured output in original positions
+#' Evaluates code chunks which are marked as between adjacent lines of @@@s.
+#' Replace these code chunks with evaluated output captured using capture.output function.
 #'
-#' @param infile - input Rmd or html file
+#' @param infile - input file for be processed
 #'
-#' @param symbol - symbol string to identify which are code chunks/lines to processed
+#' @param outfile - output file name
 #'
-#' @param outfile - output file name after processing. Either outfile or fileext must be provided.
+#' @importFrom tools file_path_sans_ext
 #'
-#' @param fileext - file extension of output file is required if outfile is not provided.
-#'
-#' @param encoding - file encoding is required to readLines of infile
-#'
-#' @import xml2
-#'
-#' @importFrom tools file_ext
-#'
-eval_replace <- function(infile, symbol, outfile=NULL, fileext=NULL, encoding="UTF-8") {
-    if (is.null(outfile)) {
-        if (!is.null(fileext)) {
-            outfile <- tempfile(file_ext(infile), fileext=fileext)
-        } else {
-            stop("either outfile or fileext must be provided.")
-        }
-    }
+pre_knit_proc <- function(infile, outfile=NULL, encoding="UTF-8") {
+    symbol <- '@@@'
 
-    invisible(file.copy(infile, outfile))
+    if (is.null(outfile)) {
+        outfile <- tempfile(tools::file_path_sans_ext(infile), fileext='.Rmd')
+    }
 
     #read in code file
     incode <- readLines(infile, encoding=encoding)
@@ -75,41 +62,23 @@ eval_replace <- function(infile, symbol, outfile=NULL, fileext=NULL, encoding="U
     indices <- which(grepl(symbol, incode))
 
     if (length(indices) > 0) {
-        if (tolower(file_ext(infile))=="html") {
-            doc <- read_html(infile)
-            codesInText <- xml_text(xml_find_all(doc, "//code"))
-            codesNeedSrcing <- gsub(paste(symbol,""), "",
-                codesInText[grepl(symbol, codesInText)])
-            reformedCode <- lapply(codesNeedSrcing, function(x) c(symbol, x))
-            names(reformedCode) <- indices
+        #chunk/code starting line positions
+        startIdx <- indices[seq.int(1L, length(indices), 2L)]
+        endIdx <- indices[seq.int(2L, length(indices), 2L)]
 
-            idx <- rep(0, length(incode))
-            posn <- sort(unique(c(1, indices, pmin(indices+1,length(incode)))))
-            idx[posn] <- posn
-            lsIncode <- split(incode, posn[cumsum(idx!=0)])
-
-            for (i in as.character(indices)) {
-                lsIncode[[i]] <- reformedCode[[i]]
-            }
-
-        } else {
-            #chunk/code starting line positions
-            startIdx <- indices[seq.int(1L, length(indices), 2L)]
-            endIdx <- indices[seq.int(2L, length(indices), 2L)]
-
-            #split into incode chunks i.e. those without and those with symbol
-            idx <- rep(0, length(incode))
-            posn <- sort(unique(c(1, startIdx, pmin(endIdx+1, length(incode)))))
-            idx[posn] <- 1
-            lsIncode <- split(incode, cumsum(idx))
-        }
+        #split into incode chunks i.e. those without and those with symbol
+        idx <- rep(0, length(incode))
+        posn <- sort(unique(c(1, startIdx, pmin(endIdx+1, length(incode)))))
+        idx[posn] <- 1
+        codeSections <- split(incode, cumsum(idx))
 
         #create a new environment to run chunk so as not to overwrite
         #existing variables
         temp_env_ <- new.env()
 
         #source each chunk of code and return the character vector
-        newIncode <- do.call(c, lapply(lsIncode, function(x) {
+        newIncode <- do.call(c, lapply(codeSections, function(x) {
+            x <- trimws(x)
             if (x[1] == symbol) {
                 x <- x[x!=symbol]
                 return(eval_src(x, envir=temp_env_))
@@ -119,23 +88,11 @@ eval_replace <- function(infile, symbol, outfile=NULL, fileext=NULL, encoding="U
 
         #write new code to output file
         writeLines(newIncode, outfile)
+    } else {
+
+        #no symbol found; use original input file
+        invisible(file.copy(infile, outfile))
     }
-} #evalReplace
-
-
-
-##########################################################################
-#' Pre-knitting Processing
-#'
-#' Evaluates code chunks which are marked as between adjacent lines of @@@s.
-#' Replace these code chunks with evaluated output captured using capture.output function.
-#'
-#' @param pRmdfile - input file for be processed
-#'
-#' @param Rmdfile - output file name
-#'
-pre_knit_proc <- function(pRmdfile, Rmdfile=NULL) {
-    eval_replace(pRmdfile, symbol='@@@', outfile=Rmdfile, fileext='.Rmd')
 } #pre_knit_proc
 
 
@@ -154,8 +111,40 @@ pre_knit_proc <- function(pRmdfile, Rmdfile=NULL) {
 #'
 #' @param outhtml - output file name
 #'
+#' @import XML
+#'
+#' @importFrom tools file_path_sans_ext
+#'
 post_html_render_proc <- function(inhtml, outhtml=NULL) {
-    eval_replace(inhtml, symbol='%%%', outfile=outhtml, fileext='.html')
+    symbol <- '%%%'
+
+    if (is.null(outhtml)) {
+        outhtml <- tempfile(tools::file_path_sans_ext(inhtml), fileext='.html')
+    }
+
+    #parse input html
+    indoc <- htmlParse(inhtml)
+
+    #select code nodes
+    codenodes <- getNodeSet(indoc, "//code")
+
+    #create a new environment to run chunk so as not to overwrite
+    #existing variables
+    temp_env_ <- new.env()
+
+    #evaluate and replace code
+    invisible(lapply(codenodes, function(x) {
+        rcodes <- xmlValue(x)
+        if (grepl(paste0("^",symbol), rcodes)) {
+            rcodes <- trimws(gsub(paste0("^",symbol), "", rcodes))
+            htmlcode <- eval_src(rcodes, temp_env_)
+            htmldoc <- htmlParse(htmlcode, asText=TRUE)
+            newnode <- getNodeSet(htmldoc, "//body/*")[[1]]
+            replaceNodes(x, newnode)
+        }
+    }))
+
+    saveXML(indoc, file=outhtml)
 } #post_html_render_proc
 
 
@@ -165,7 +154,7 @@ post_html_render_proc <- function(inhtml, outhtml=NULL) {
 #' then Post HTML-rendering Processing
 #'
 #' 1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks
-#' which are marked as between adjacent lines of @@@@s, and then
+#' which are marked as between adjacent lines of @@@@@@s, and then
 #' replace these code chunks with evaluated output captured using capture.output function.
 #' 2) Function then calls knitr::knit followed by rmarkdown::render.
 #' 3) After which, in post HTML-rendering processing, function evaluates code chunks
@@ -192,6 +181,9 @@ post_html_render_proc <- function(inhtml, outhtml=NULL) {
 #'
 #' @examples
 #' \donttest{
+#' oldwd <- getwd()
+#' setwd(tempdir())
+#'
 #' #pandoc.exe is required to run this code
 #' samplermd <- tempfile('test', getwd(), '.Rmd')
 #' addhtml <- 'test__test.html'
@@ -225,10 +217,14 @@ post_html_render_proc <- function(inhtml, outhtml=NULL) {
 #'
 #' #Pre-knit processing and post HTML render processing
 #' preknit_knit_render_postrender(samplermd)
+#'
+#' #output 'test__test.html' is in tempdir()
+#'
+#' setwd(oldwd)
 #' }
 #'
 preknit_knit_render_postrender <- function(pRmdfile, outhtml=NULL) {
-    bn <- file_path_sans_ext(basename(pRmdfile))
+    bn <- tools::file_path_sans_ext(basename(pRmdfile))
     Rmdfile <- tempfile(bn, getwd(), ".Rmd")
     mdfile <- tempfile(bn, getwd(), ".md")
     htmlfile <- tempfile(bn, getwd(), ".html")
@@ -237,7 +233,7 @@ preknit_knit_render_postrender <- function(pRmdfile, outhtml=NULL) {
     }
 
     #print("Pre-knitting processing...")
-    pre_knit_proc(pRmdfile, Rmdfile)
+    pre_knit_proc(pRmdfile, Rmdfile, "UTF-8")
 
     #print("Knitting...")
     knit(Rmdfile, mdfile)
