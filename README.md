@@ -44,6 +44,10 @@ The output html file will have the codes between `@@@` and/or `` `%%% ` `` code 
     
     library(PreKnitPostHTMLRender)
     
+    oldwd <- getwd()
+    setwd(tempdir())
+    
+    #pandoc.exe is required to run this code
     samplermd <- tempfile('test', getwd(), '.Rmd')
     addhtml <- 'test__test.html'
     
@@ -75,8 +79,9 @@ The output html file will have the codes between `@@@` and/or `` `%%% ` `` code 
     '</ul>'), addhtml)
     
     #Pre-knit processing and post HTML render processing
-    preknit_knit_render_postrender(samplermd)
-
-    #You can open 'test__test.html' in your current directory
-
+    preknit_knit_render_postrender(samplermd, "sample__html.html")
+    
+    #output 'sample__html.html' is in tempdir()
+    
+    setwd(oldwd)
 
