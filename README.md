@@ -5,6 +5,22 @@ Dynamize headers or R code within Rmd documents to prevent proliferation of Rmd 
 ## Description
 First pre-knitting processing, then knitr::knit, then rmarkdown::render, then post HTML-rendering processing
 
+The current process:
+<pre>    
+ *.Rmd       ---------------     *.md     ---------------------  *.html
+-----------> | knitr::knit | -----------> | rmarkdown::render | ----------->
+             ---------------              ---------------------
+</pre>
+
+`preknit_knit_render_postrender`:
+<pre>  
+
+*.Rmd     ------------   *.Rmd     ---------------     *.md     ---------------------    *.html    --------------  *.html
+--------> | pre_knit |-----------> | knitr::knit | -----------> | rmarkdown::render | -----------> | post_render| -----------> 
+          ------------             ---------------              ---------------------              --------------
+</pre>
+
+
 1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks which are marked as between adjacent lines of `@@@`, and then replace these code chunks with evaluated output captured using capture.output function.
 
 2) Function then calls knitr::knit followed by rmarkdown::render.
