@@ -3,7 +3,7 @@ Dynamize headers or R code within Rmd documents to prevent proliferation of Rmd 
 
 
 ## Description
-First pre-knitting processing, then knitr::knit, then rmarkdown::render, then post HTML-rendering processing
+First pre-knitting processing, then `knitr::knit`, then `rmarkdown::render`, then post HTML-rendering processing
 
 The current process:
 <pre>    
@@ -21,9 +21,9 @@ The current process:
 </pre>
 
 
-1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks which are marked as between adjacent lines of `@@@`, and then replace these code chunks with evaluated output captured using capture.output function.
+1) In pre-knitting processing, function takes in a Rmd file, evaluates code chunks which are marked as between adjacent lines of `@@@`, and then replace these code chunks with evaluated output captured using `capture.output` function.
 
-2) Function then calls knitr::knit followed by rmarkdown::render.
+2) Function then calls `knitr::knit` followed by `rmarkdown::render`.
 
 3) After which, in post HTML-rendering processing, function evaluates code chunks in between `` `%%% MY_CODE_HERE ` ``, and then replace these code chunks with evaluated output captured using capture.output function. Typically, we want to insert an external HTML file and we can use `` `%%% writeLines(readLines("MY_EXTERNAL_HTML_FILE"))` `` within the Rmd file. This function will read in the external html file and replace this `` `%%% ` `` with contents in the html file.
 
