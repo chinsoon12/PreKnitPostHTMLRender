@@ -17,26 +17,6 @@ run_code <- function(oneline, envir) {
 
 
 ##########################################################################
-#' Eval a character array of code
-#'
-#' Evaluate an array of code line by line and capture output
-#'
-#' @param srcCharVec - code character array
-#'
-#' @param ... - arguments to be passed on to other functions
-#'
-eval_src <- function(srcCharVec, ...) {
-    unlist(lapply(srcCharVec,
-        function(x) {
-            if (trimws(x) != '') {
-                return(run_code(x, ...))
-            }
-        }))
-} #eval_src
-
-
-
-##########################################################################
 #' Pre-knitting Processing
 #'
 #' Evaluates code chunks which are marked as between adjacent lines of @@@s.
@@ -80,8 +60,8 @@ pre_knit_proc <- function(infile, outfile=NULL) {
         newIncode <- do.call(c, lapply(codeSections, function(x) {
             x <- trimws(x)
             if (x[1] == symbol) {
-                x <- x[x!=symbol]
-                return(eval_src(x, envir=temp_env_))
+                x <- x[x!=symbol & x!='']
+                return(run_code(x, envir=temp_env_))
             }
             return(x)
         }))
@@ -137,7 +117,7 @@ post_html_render_proc <- function(inhtml, outhtml=NULL) {
         rcodes <- xmlValue(x)
         if (grepl(paste0("^",symbol), rcodes)) {
             rcodes <- trimws(gsub(paste0("^",symbol), "", rcodes))
-            htmlcode <- eval_src(rcodes, temp_env_)
+            htmlcode <- run_code(rcodes, temp_env_)
             htmldoc <- htmlParse(htmlcode, asText=TRUE)
             newnode <- getNodeSet(htmldoc, "//body/*")[[1]]
             replaceNodes(x, newnode)

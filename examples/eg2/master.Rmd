@@ -1,0 +1,14 @@
+# Analysis Routines
+
+Analysis for this can be seen in figures `r paste(paste0("\\ref{", CHUNK_NAME, 1:NUM_CHUNKS, "}"), collapse=", ")`
+
+@@@
+rmdTxt <- unlist(lapply(1:NUM_CHUNKS, function(n) {
+    c(paste0("## Analysis Routine ", n),
+        paste0("```{r ",CHUNK_NAME, n, ", child = 'child.Rmd'}"),
+        "```")
+}))
+writeLines(rmdTxt)
+
+@@@
+
